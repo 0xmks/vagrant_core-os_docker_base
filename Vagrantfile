@@ -23,7 +23,7 @@ IGNITION_CONFIG_PATH = File.join(File.dirname(__FILE__), "config.ign")
 CONFIG = File.join(File.dirname(__FILE__), "config.rb")
 
 # Defaults for config options defined in CONFIG
-$num_instances = 3
+$num_instances = 1
 $instance_name_prefix = "core"
 $enable_serial_logging = false
 $share_home = false
@@ -86,7 +86,7 @@ Vagrant.configure("2") do |config|
     config.vbguest.auto_update = false
   end
 
-  # $num_instances ‚Åw’è‚µ‚½”‚¾‚¯ŒJ‚è•Ô‚µƒm[ƒhì¬
+  # $num_instances ã§æŒ‡å®šã—ãŸæ•°ã ã‘ç¹°ã‚Šè¿”ã—ãƒãƒ¼ãƒ‰ä½œæˆ
   (1..$num_instances).each do |i|
     config.vm.define vm_name = "%s-%02d" % [$instance_name_prefix, i] do |config|
       config.vm.hostname = vm_name
@@ -142,9 +142,11 @@ Vagrant.configure("2") do |config|
       # This tells Ignition what the IP for eth1 (the host-only adapter) should be
       config.ignition.ip = ip
 
-      # hosts‚Ö’Ç‰Á
-      #config.hostsupdater.aliases = [ "core" + i.to_s + ".localhost" ]
-      config.hostsupdater.aliases = [ vm_name + ".localhost" ]
+      # ãƒ›ã‚¹ãƒˆOS ã® hosts ã¸ aliasesã‚’è¿½åŠ 
+      #config.hostsupdater.aliases = [ vm_name + ".localhost" ]
+      vhosts_dirs = []
+      Dir.glob("./share/public_html/*") {|f|  vhosts_dirs << File.basename(f) + ".localhost" }
+      config.hostsupdater.aliases = vhosts_dirs
 
       # Uncomment below to enable NFS for sharing the host machine into the coreos-vagrant VM.
       config.vm.synced_folder "./share", "/home/core/share", id: "core", :nfs => true, :mount_options => ['nolock,vers=3,udp']
@@ -173,9 +175,11 @@ Vagrant.configure("2") do |config|
         end
       end
 
-      # provision ‚É docker-compose build‚ğÀs
+      # provision æ™‚ã« docker-compose ã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«
       config.vm.provision "shell", inline: "mkdir -p /opt/bin && curl -sSL https://github.com/docker/compose/releases/download/$(curl -s 'https://api.github.com/repos/docker/compose/releases/latest' | jq .name -r)/docker-compose-$(uname -s)-$(uname -m) > /opt/bin/docker-compose && chmod +x /opt/bin/docker-compose"
-      config.vm.provision "shell", inline: "sleep 10"
+
+      # vagrant up æ™‚ã« docker-compose up ã‚’å®Ÿè¡Œ
+      config.vm.provision "shell",run: "always", inline: "/opt/bin/docker-compose -f /home/core/share/docker/docker-compose.yml up -d --build 1>&2"
 
     end
   end

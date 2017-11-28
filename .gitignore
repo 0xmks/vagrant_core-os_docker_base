@@ -6,3 +6,11 @@ config.ign
 config.ign.merged
 *.vmdk
 *.img
+
+# mysql_data
+/share/docker/mysql/data/*
+!/share/docker/mysql/data/.gitkeep
+# html
+/share/puiblic_html/*
+!/share/puiblic_html/core01/
+!/share/puiblic_html/core02/

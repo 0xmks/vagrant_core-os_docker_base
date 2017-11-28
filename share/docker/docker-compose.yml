@@ -10,33 +10,33 @@ services:
     volumes:
       - ./nginx/certs:/etc/nginx/certs:ro
       - /var/run/docker.sock:/tmp/docker.sock:ro
-  # 2) mysql
+
+  # 2) mysqld
   # https://hub.docker.com/_/mysql/
-  mysql:
+  mysqld:
     build: ./mysql/build/
+    hostname: mysqld
     ports:
       - "3306:3306"
-    restart: always
-    hostname: mysql
     environment:
       MYSQL_ROOT_PASSWORD: "password"
       TZ: "Asia/Tokyo"
     volumes:
-      - ./mysql/data:/var/lib/mysql
+      - /home/core/share/docker/mysql/data/:/var/lib/mysql
 
   ## any virtualhosts
   test01.localhost:
     build: ./php7-apache/build/
     volumes:
-      - /vagrant/public_html/test01/:/var/www/html/
+      - /home/core/share/public_html/core-01/:/var/www/html/
     environment:
-      - VIRTUAL_HOST=test01.localhost
+      - VIRTUAL_HOST=core-01.localhost
       - CERT_NAME=shared
   test02.localhost:
     build: ./php7-apache/build/
     volumes:
-      - /vagrant/public_html/test02/:/var/www/html/
+      - /home/core/share/public_html/core-02/:/var/www/html/
     environment:
-      - VIRTUAL_HOST=test02.localhost
+      - VIRTUAL_HOST=core-02.localhost
       - CERT_NAME=shared
 
